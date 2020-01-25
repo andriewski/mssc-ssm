@@ -40,9 +40,40 @@ class PaymentServiceImplTest {
         System.out.println("---");
 
         Payment preAuthPayment = paymentRepository.getOne(savedPayment.getId());
+        System.out.println("Should be PRE_AUTH or PRE_AUTH_ERROR");
+        System.out.println(preAuthPayment.getState());
+    }
+
+    @Transactional
+    @Test
+    void authPayment() {
+        payment.setState(PaymentState.PRE_AUTH);
+        Payment savedPayment = paymentRepository.save(payment);
+
+        paymentService.authorizePayment(savedPayment.getId());
+
+        Payment authPayment = paymentRepository.getOne(savedPayment.getId());
+        System.out.println("Should be AUTH or AUTH_ERROR");
+        System.out.println(authPayment.getState());
+    }
+
+    @Transactional
+    @Test
+    void viaPaymentProcess() {
+        Payment savedPayment = paymentService.newPayment(payment);
+        assertEquals(savedPayment.getState(), PaymentState.NEW);
+
+        paymentService.preAuthPayment(savedPayment.getId());
+
+        Payment preAuthPayment = paymentRepository.getOne(savedPayment.getId());
+        System.out.println("Should be PRE_AUTH or PRE_AUTH_ERROR");
+        System.out.println(preAuthPayment.getState());
         assertEquals(preAuthPayment.getState(), PaymentState.PRE_AUTH);
 
-        System.out.println("---");
-        System.out.println(preAuthPayment);
+        paymentService.authorizePayment(savedPayment.getId());
+
+        Payment authPayment = paymentRepository.getOne(savedPayment.getId());
+        System.out.println("Should be AUTH or AUTH_ERROR");
+        System.out.println(authPayment.getState());
     }
 }

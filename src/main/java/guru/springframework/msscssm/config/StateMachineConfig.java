@@ -42,7 +42,16 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
                 .and()
                 .withExternal().source(PaymentState.NEW).target(PaymentState.PRE_AUTH).event(PaymentEvent.PRE_AUTH_APPROVED)
                 .and()
-                .withExternal().source(PaymentState.NEW).target(PaymentState.PRE_AUTH_ERROR).event(PaymentEvent.PRE_AUTH_DECLINED);
+                .withExternal().source(PaymentState.NEW).target(PaymentState.PRE_AUTH_ERROR).event(PaymentEvent.PRE_AUTH_DECLINED)
+
+                .and()
+
+                .withExternal().source(PaymentState.PRE_AUTH).target(PaymentState.PRE_AUTH).event(PaymentEvent.AUTHORIZE)
+                    .action(authAction())
+                .and()
+                .withExternal().source(PaymentState.PRE_AUTH).target(PaymentState.AUTH).event(PaymentEvent.AUTH_APPROVED)
+                .and()
+                .withExternal().source(PaymentState.PRE_AUTH).target(PaymentState.AUTH_ERROR).event(PaymentEvent.AUTH_DECLINED);
     }
 
     @Override
@@ -58,7 +67,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
                 .listener(adapter);
     }
 
-    public Action<PaymentState, PaymentEvent> preAuthAction() {
+    private Action<PaymentState, PaymentEvent> preAuthAction() {
         return context -> {
             System.out.println("PreAuth was called!!!");
             Message<PaymentEvent> msg;
@@ -74,6 +83,31 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
                 System.out.println("Declined!!!");
 
                 msg = MessageBuilder.withPayload(PaymentEvent.PRE_AUTH_DECLINED)
+                        .setHeader(PaymentServiceImpl.PAYMENT_ID_HEADER, messageHeader)
+                        .build();
+            }
+
+            context.getStateMachine().sendEvent(msg);
+        };
+    }
+
+
+    private Action<PaymentState, PaymentEvent> authAction() {
+        return context -> {
+            System.out.println("Auth was called!!!");
+            Message<PaymentEvent> msg;
+            Object messageHeader = context.getMessageHeader(PaymentServiceImpl.PAYMENT_ID_HEADER);
+
+            if (new Random().nextInt(10) < 8) {
+                System.out.println("Approved!!!");
+
+                msg = MessageBuilder.withPayload(PaymentEvent.AUTH_APPROVED)
+                        .setHeader(PaymentServiceImpl.PAYMENT_ID_HEADER, messageHeader)
+                        .build();
+            } else {
+                System.out.println("Declined!!!");
+
+                msg = MessageBuilder.withPayload(PaymentEvent.AUTH_DECLINED)
                         .setHeader(PaymentServiceImpl.PAYMENT_ID_HEADER, messageHeader)
                         .build();
             }
