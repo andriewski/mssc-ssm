@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 public class PaymentServiceImpl implements PaymentService {
-    static final String PAYMENT_ID_HEADER = "payment_id";
+    public static final String PAYMENT_ID_HEADER = "payment_id";
 
     private final PaymentRepository paymentRepository;
     private final StateMachineFactory<PaymentState, PaymentEvent> stateMachineFactory;
@@ -34,7 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
     public StateMachine<PaymentState, PaymentEvent> preAuthPayment(Long paymentId) {
         StateMachine<PaymentState, PaymentEvent> stateMachine = build(paymentId);
 
-        sendEventToStateMachine(paymentId, stateMachine, PaymentEvent.PRE_AUTH_APPROVED);
+        sendEventToStateMachine(paymentId, stateMachine, PaymentEvent.PRE_AUTHORIZE);
 
         return stateMachine;
     }
