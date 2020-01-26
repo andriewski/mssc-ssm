@@ -20,7 +20,6 @@ public class PaymentStateChangeInterceptor extends StateMachineInterceptorAdapte
 
     private final PaymentRepository paymentRepository;
 
-
     @Override
     public void preStateChange(State<PaymentState, PaymentEvent> state, Message<PaymentEvent> message,
                                Transition<PaymentState, PaymentEvent> transition,
